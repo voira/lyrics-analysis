@@ -31,7 +31,7 @@ library(textstem)
 
 
 # Load data
-df <- read_excel("fixed.xlsx")
+df <- read_excel("C:/Users/aylin/Downloads/fixed.xlsx")
 colnames(df)[2] <- "title"
 
 # Clean the lyrics column
@@ -72,8 +72,8 @@ stop_words <- c(stop_words, "I'm", "I'll", "ain't","??'m", "??'ll")
 new_stop_words <- c('ooh','yeah','hey','whoa','woah', 'ohh', 'was', 'mmm', 'oooh','yah','yeh','mmm', 'hmm',
                     'deh','doh','and','yes', 'can', 'And', 'the', 'The', 'but', 'ayy', 'doo', 'let', 'Let', 'huh',
                     'dit', 'dat', 'wit', 'ain', 'll', 've', 're', 'isn', 't', 's', 'd', 'm', 'woah', 'uh', 'na',
-                    "I'm", "I'll", "ain't", "??'m", "??'ll", "mai", "get", "sai","wai", "like", "it'","cau", "\u0131'll","\u0131t's","choo",
-                    "\u0131'm", "\u0131've")
+                    "I'm", "I'll", "ain't", "??'m", "??'ll", "mai", "get", "sai","wai", "like", "it'","cau", 'one', 'two', 'three', 'four', 'que', 'choo', 'chh', 'nah','boaw', 
+                    'ody', 'oop','ron', 'woo', 'aye', 'wee')
 stop_words <- c(stopwords::stopwords("en"), new_stop_words)
 stop_words_df <- tibble(word = stop_words)
 
@@ -84,9 +84,6 @@ tidy_data <- tidy_data %>%
 # Exclude words with less than 3 characters
 tidy_data <- tidy_data %>%
   filter(nchar(word) >= 3)
-# Lemmatize words
-tidy_data <- tidy_data %>%
-  mutate(word = lemmatize_words(word))
 
 # Count word frequency per decade
 word_freq_year <- tidy_data %>%
@@ -101,7 +98,7 @@ word_freq_year <- tidy_data %>%
 lyrics_t <-
   tidy_data |>
   count (Year, word) |>
-  filter(n>120) |>   #the frequency threshold
+  filter(n>80) |>   #the frequency threshold
   cast_sparse(Year, word, n)
 
 dim(lyrics_t)
@@ -166,11 +163,11 @@ effects <-
 tidy(effects) |> 
   filter(term != "(Intercept)", p.value < 0.05)
 ##evidence that there is more topic 2 from 80s, 90s,2000s, 2010s, and more topic 4 from 2000s and 2010s 
-tidy(topic_model, matrix = "lift") |> 
+tidy(topic_model, matrix = "frex") |> 
   filter(topic == 1)
-tidy(topic_model, matrix = "lift") |> 
+tidy(topic_model, matrix = "frex") |> 
   filter(topic == 2)
-tidy(topic_model, matrix = "lift") |> 
+tidy(topic_model, matrix = "frex") |> 
   filter(topic == 4)
-tidy(topic_model, matrix = "lift") |> 
+tidy(topic_model, matrix = "frex") |> 
   filter(topic == 3)
