@@ -31,7 +31,7 @@ library(textstem)
 
 
 # Load data
-df <- read_excel("C:/Users/aylin/Downloads/fixed.xlsx")
+df <- read_excel("fixed.xlsx")
 colnames(df)[2] <- "title"
 
 # Clean the lyrics column
