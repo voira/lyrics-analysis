@@ -104,7 +104,7 @@ lyrics_t <-
 dim(lyrics_t)
 
 ####Addition
-top_mod <- LDA(lyrics_t, k = 4, method = "VEM")
+top_mod <- LDA(lyrics_t, k = 5, method = "VEM")
 
 # Get top words for each topic
 top_words <- tidy(top_mod, matrix = "beta")
@@ -126,7 +126,7 @@ top_words %>%
 #install.packages("stm")
 library(stm)
 set.seed(123)
-topic_model <- stm(lyrics_t, K = 4, verbose = FALSE)
+topic_model <- stm(lyrics_t, K = 5, verbose = FALSE)
 summary(topic_model)
 
 df_clean <- df_clean %>%
@@ -156,7 +156,7 @@ set.seed(123)
 
 effects <-
   estimateEffect(
-    1:4 ~ decade,
+    1:5 ~ decade,
     topic_model,
     df_clean |> distinct(Year, decade) |> arrange(Year)
   )
@@ -166,8 +166,8 @@ tidy(effects) |>
 tidy(topic_model, matrix = "frex") |> 
   filter(topic == 1)
 tidy(topic_model, matrix = "frex") |> 
-  filter(topic == 2)
-tidy(topic_model, matrix = "frex") |> 
   filter(topic == 4)
+tidy(topic_model, matrix = "frex") |> 
+  filter(topic == 5)
 tidy(topic_model, matrix = "frex") |> 
   filter(topic == 3)
