@@ -67,7 +67,6 @@ tidy_data
 # Get stopwords
 stop_words <- get_stopwords()
 stop_words <- stopwords::stopwords("en")
-stop_words <- c(stop_words, "I'm", "I'll", "ain't","??'m", "??'ll")
 new_stop_words <- c('ooh','yeah','hey','whoa','woah', 'ohh', 'was', 'mmm', 'oooh','yah','yeh','mmm', 'hmm',
                     'deh','doh','and','yes', 'can', 'And', 'the', 'The', 'but', 'ayy', 'doo', 'let', 'Let', 'huh',
                     'dit', 'dat', 'wit', 'ain', 'll', 've', 're', 'isn', 't', 's', 'd', 'm', 'woah', 'uh', 'na',
