@@ -67,10 +67,11 @@ tidy_data
 # Get stopwords
 stop_words <- get_stopwords()
 stop_words <- stopwords::stopwords("en")
+stop_words <- c(stop_words, "I'm", "I'll", "ain't","??'m", "??'ll")
 new_stop_words <- c('ooh','yeah','hey','whoa','woah', 'ohh', 'was', 'mmm', 'oooh','yah','yeh','mmm', 'hmm',
                     'deh','doh','and','yes', 'can', 'And', 'the', 'The', 'but', 'ayy', 'doo', 'let', 'Let', 'huh',
                     'dit', 'dat', 'wit', 'ain', 'll', 've', 're', 'isn', 't', 's', 'd', 'm', 'woah', 'uh', 'na',
-                    "I'm","??'m","??'ll","??'ve", "I'll","??t's", "ain't", "??'m", "??'ll", "mai", "get", "sai","wai", "like", "it'","cau", 'one', 'two', 'three', 'four', 'que', 'choo', 'chh', 'nah','boaw', 
+                    "I'm","ı'm","ı'll","ı've", "I'll","ıt's", "ain't", "??'m", "??'ll", "mai", "get", "sai","wai", "like", "it'","cau", 'one', 'two', 'three', 'four', 'que', 'choo', 'chh', 'nah','boaw', 
                     'ody', 'oop','ron', 'woo', 'aye', 'wee', "also", "want", "wanna", "gonna", "cause", "might", "just","got","gon")
 stop_words <- c(stopwords::stopwords("en"), new_stop_words)
 stop_words_df <- tibble(word = stop_words)
@@ -96,13 +97,13 @@ word_freq_year <- tidy_data %>%
 lyrics_t <-
   tidy_data |>
   count (Year, word) |>
-  filter(n>80) |>   #the frequency threshold
+  filter(n>40) |>   #the frequency threshold
   cast_sparse(Year, word, n)
 
 dim(lyrics_t)
 
 ####Addition
-top_mod <- LDA(lyrics_t, k = 5, method = "VEM")
+top_mod <- LDA(lyrics_t, k = 5,  control = list(seed = 321))
 
 # Get top words for each topic
 top_words <- tidy(top_mod, matrix = "beta")
