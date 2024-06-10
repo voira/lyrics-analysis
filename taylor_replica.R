@@ -1,38 +1,28 @@
-# Install necessary packages
-install.packages(c(
-  "writexl", "tm", "topicmodels", "reshape2", "ggplot2", "wordcloud", "pals", 
-  "SnowballC", "lda", "ldatuning", "kableExtra", "DT", "flextable", 
-  "stopwords", "textstem", "purrr", "reticulate", "textTinyR", "tidytext"
-))
-
 # Load required libraries
 library(readr)
 library(stringr)
 library(readxl)
 library(dplyr)
 library(writexl)
-library(tm)
 library(topicmodels)
 library(reshape2)
 library(ggplot2)
-library(wordcloud)
-library(pals)
-library(SnowballC)
 library(lda)
 library(ldatuning)
-library(knitr)
-library(kableExtra)
-library(DT)
-library(flextable)
-library(purrr)
 library(tidytext)
 library(stopwords)
 library(textstem)
+library(LDAvis)
+library(tm)
 
+# Set the locale to English
+Sys.setlocale("LC_ALL", "en_US.UTF-8")
 
 # Load data
-df <- read_excel("C:/Users/aylin/Downloads/fixed.xlsx")
+df <- read_excel("fixed.xlsx")
 colnames(df)[2] <- "title"
+
+set.seed(123)
 
 # Clean the lyrics column
 df <- df %>%
@@ -61,21 +51,29 @@ df_clean <- df %>%
   select(-total_chars, -latin_chars, -proportion_latin)
 
 tidy_data <- df_clean %>%
-  unnest_tokens(word, Lyrics)
+  unnest_tokens(word, Lyrics) %>%
+  filter(word %in% c("??'m", "??s", "??'ll", "??", "??'ve") == FALSE) %>%
+  mutate(word = tolower(word)) %>%
+  mutate(word = lemmatize_words(word))
 
 tidy_data
 
-# Get stopwords
-stop_words <- get_stopwords()
+# Get the default stop words
 stop_words <- stopwords::stopwords("en")
-stop_words <- c(stop_words, "I'm", "I'll", "ain't","??'m", "??'ll")
-new_stop_words <- c('ooh','yeah','hey','whoa','woah', 'ohh', 'was', 'mmm', 'oooh','yah','yeh','mmm', 'hmm',
-                    'deh','doh','and','yes', 'can', 'And', 'the', 'The', 'but', 'ayy', 'doo', 'let', 'Let', 'huh',
+
+# Define additional stop words
+new_stop_words <- c('ooh', 'yeah', 'hey', 'whoa', 'woah', 'ohh', 'was', 'mmm', 'oooh', 'yah', 'yeh', 'hmm',
+                    'deh', 'doh', 'and', 'yes', 'can', 'And', 'the', 'the', 'but', 'ayy', 'doo', 'let', 'Let', 'huh',
                     'dit', 'dat', 'wit', 'ain', 'll', 've', 're', 'isn', 't', 's', 'd', 'm', 'woah', 'uh', 'na',
-                    "I'm", "I'll", "ain't", "??'m", "??'ll", "mai", "get", "sai","wai", "like", "it'","cau", 'one', 'two', 'three', 'four', 'que', 'choo', 'chh', 'nah','boaw', 
-                    'ody', 'oop','ron', 'woo', 'aye', 'wee')
-stop_words <- c(stopwords::stopwords("en"), new_stop_words)
-stop_words_df <- tibble(word = stop_words)
+                    "I'm", "I'll", "ain't", "mai", "get", "sai", "wai", "like", "it'", "cau", 'one', 
+                    'two', 'three', 'four', 'que', 'choo', 'chh', 'nah', 'boaw', 'ody', 'oop', 'ron', 'woo', 'aye', 
+                    'wee', "get", "got", "have", "just", "wanna", "gotta", "y'all", "really", "even", "gon", "now")
+
+# Combine and remove duplicates
+combined_stop_words <- unique(c(stop_words, new_stop_words))
+
+# Create a tibble
+stop_words_df <- tibble(word = combined_stop_words)
 
 # Anti-join stopwords
 tidy_data <- tidy_data %>%
@@ -89,25 +87,39 @@ tidy_data <- tidy_data %>%
 word_freq_year <- tidy_data %>%
   count(Year, word, sort = TRUE)
 
+# Define parameters
+frequency_threshold <- 80
 
+# Step 1: Count word frequencies by year
+word_counts <- tidy_data %>%
+  count(Year, word)
 
+# Step 2: Filter out low-frequency words
+filtered_counts <- word_counts %>%
+  filter(n > frequency_threshold)
 
-
-
-##TOPIC Model
-lyrics_t <-
-  tidy_data |>
-  count (Year, word) |>
-  filter(n>80) |>   #the frequency threshold
+# Step 3: Cast filtered data into sparse matrix format
+lyrics_t <- filtered_counts %>%
   cast_sparse(Year, word, n)
 
-dim(lyrics_t)
+# Define parameters
+num_topics <- 5
+method <- "VEM"
 
-####Addition
-top_mod <- LDA(lyrics_t, k = 5, method = "VEM")
+# Fit LDA model
+top_mod <- LDA(lyrics_t, k = num_topics, method = method)
 
 # Get top words for each topic
 top_words <- tidy(top_mod, matrix = "beta")
+
+# Create the LDAvis visualization
+vis <- createJSON(lda_model = top_mod, 
+                  doc_topic_dists = top_mod@gamma,
+                  vocab = top_mod@terms,
+                  doc_lengths = doc.lengths)
+
+# Save the visualization as an HTML file
+serVis(vis, out.dir = "path/to/save")
 
 # Visualize top words
 top_words %>%
@@ -122,10 +134,9 @@ top_words %>%
   labs(x = NULL, y = "Beta") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 
-
 #install.packages("stm")
 library(stm)
-set.seed(123)
+
 topic_model <- stm(lyrics_t, K = 5, verbose = FALSE)
 summary(topic_model)
 
@@ -150,7 +161,6 @@ lyrics_gamma %>%
   facet_wrap(vars(decade)) +
   labs(x = expression(gamma))
 
-
 ###topic effects
 set.seed(123)
 
@@ -162,6 +172,7 @@ effects <-
   )
 tidy(effects) |> 
   filter(term != "(Intercept)", p.value < 0.05)
+  
 ##evidence that there is more topic 2 from 80s, 90s,2000s, 2010s, and more topic 4 from 2000s and 2010s 
 tidy(topic_model, matrix = "frex") |> 
   filter(topic == 1)
